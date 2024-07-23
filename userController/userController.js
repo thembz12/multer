@@ -44,6 +44,35 @@ exports.signUp = async (req,res)=>{
         res.status(500).json(error.message)
     }}
 
+    exports.loginUser = async (req, res) => {
+        try {
+          const { email, password } = req.body;
+          const userExist = await userModel.findOne({ email: email.toLowerCase() });
+          if (!userExist) {
+            return res.status(400).json({ message: "user not found" });
+          }
+      
+          const confirmPassowrd = await bcrypt.compare(password, userExist.password);
+          if (!confirmPassowrd) {
+            return res.status(400).json({ message: "incorrect password" });
+          }
+          const token = await jwt.sign(
+            {
+              userId: userExist._id,
+              email: userExist.email,
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+          );
+          res
+            .status(200)
+            .json({ message: "login successful", data: userExist, token });
+        } catch (error) {
+          res.status(500).json(error.message);
+        }
+      };
+      
+
     exports.getOne = async (req, res) => {
         try {
             
